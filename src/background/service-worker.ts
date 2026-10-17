@@ -2,6 +2,7 @@ import type { Session } from "../types";
 import {
   appendEvent,
   deleteSession,
+  getAllSessions,
   getSession,
   saveSession,
   getActiveSessionId,
@@ -12,12 +13,27 @@ import {
 } from "../lib/storage";
 import { segment } from "../reconstruct/segment";
 import { classify } from "../reconstruct/classify";
-import { applyLabelEdits } from "../lib/privacy-preview";
+import { applyReview } from "../lib/review";
 import type { WeftMessage } from "./messages";
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(({ reason }) => {
   console.log("[Weft] service worker installed");
+  // Sessions confirmed by an older version kept each click's original text
+  // in their raw events, even where the user redacted the step. Their steps
+  // already hold the reviewed labels, so re-applying the review with no new
+  // edits brings the raw events in line (see src/lib/review.ts).
+  if (reason === "update") {
+    messageQueue = messageQueue.then(scrubReviewedSessions).catch((err) => {
+      console.error("[Weft] failed to clean up reviewed sessions", err);
+    });
+  }
 });
+
+async function scrubReviewedSessions() {
+  for (const session of await getAllSessions()) {
+    if (session.reviewed) await saveSession(applyReview(session, {}));
+  }
+}
 
 // Without this, the toolbar icon (declared via manifest's `action`) does
 // nothing when clicked — the side panel API needs to be told explicitly to
@@ -164,11 +180,7 @@ async function confirmSession(sessionId: string, labelEdits: Record<string, stri
   const session = await getSession(sessionId);
   if (!session) return { confirmed: false };
 
-  if (session.steps) {
-    session.steps = applyLabelEdits(session.steps, labelEdits);
-  }
-  session.reviewed = true;
-  await saveSession(session);
+  await saveSession(applyReview(session, labelEdits));
   return { confirmed: true };
 }
 

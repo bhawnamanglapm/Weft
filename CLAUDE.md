@@ -51,8 +51,8 @@ Signal pink marks exactly one thing at a time — never decorative.
 ## Privacy (first-class, not fine print)
 
 - Store field identity only; never values, query strings, page content, or screenshots.
-- Run PII redaction on any retained text (emails, PAN/GST, account/card-like numbers, name fields).
-- Show a **pre-save privacy preview** so the user sees exactly what will be stored and can redact or discard.
+- Run PII redaction on any retained text (emails, PAN/GST, account/card-like numbers). Names are **not** caught by the regex pass — role scoping and the privacy preview are the mitigation; never claim otherwise.
+- Show a **privacy preview** when capture stops so the user sees exactly what will be kept and can redact or discard. Confirming must rewrite the raw events too (`src/lib/review.ts`) — the merge rebuilds steps from them.
 - Nothing is ever transmitted. The honest claim is "structurally, we don't capture the sensitive part."
 
 ## Do NOT build (out of scope — note for v2 and move on)

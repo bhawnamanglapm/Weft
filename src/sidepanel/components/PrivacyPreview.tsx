@@ -30,11 +30,12 @@ export default function PrivacyPreview({
 
   return (
     <div className="privacy-preview">
-      <h2>Before this is saved</h2>
+      <h2>Before you keep this</h2>
       <p className="muted">
-        No input values, query strings, page content, or screenshots were captured — only
-        the step labels, systems, and timings below. Edit or redact any label you'd rather
-        not keep, or discard the whole session.
+        No input values, query strings, table data, or screenshots were captured — only the
+        step labels, systems, and timings below. Labels are button and link text, so check for
+        names. Edit or redact any label you'd rather not keep, or discard the whole session.
+        Only what you confirm here is kept.
       </p>
       <ol className="privacy-preview-list">
         {previewSteps.map((step) => (

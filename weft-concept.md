@@ -15,7 +15,7 @@ Weft observes people doing real work, reconstructs the true (multi-path) workflo
 Three gaps sit on top of each other, and most tools only address the first:
 
 1. **Nobody knows how the work is really done.** The true process lives in muscle memory across several web apps; documented SOPs are fiction.
-2. **Insight dies in a slide.** Even when you find the inefficiency, the distance from "here's an opportunity" to someone actually building the fix is where 90% of optimization efforts quietly expire. A recommendation nobody implements has produced zero value.
+2. **Insight dies in a slide.** Even when you find the inefficiency, the distance from "here's an opportunity" to someone actually building the fix is where most optimization efforts quietly expire. A recommendation nobody implements has produced zero value.
 3. **Nobody proves it worked.** Optimization is bought on ROI, yet almost no one closes the loop from "we changed X" to "it saved ₹Y / Z hours." Without that, there's no renewal case and no honest scorecard.
 
 Process-mining tools (Celonis, UiPath) attack gap 1 with heavy, IT-led, six-figure deployments — and stop there. Weft attacks all three, lightly, from the front end.
@@ -42,7 +42,7 @@ These principles also defuse the biggest adoption and legal risk: recording work
 A browser-side observer, not an agent that logs in for you. The user is already logged in; Weft watches while *they* work.
 
 - **No credentials** are ever collected or stored.
-- **No values, no page content, no screenshots.** Weft captures the *structure* of the workflow — which step, which system, what kind of action — using stable element roles/labels, not the data on screen. Anything textual that is captured passes a PII-redaction pass, and a **privacy preview** shows the user exactly what will be stored before it's saved. (This closes the earlier hole where on-screen content — a customer name in a heading, an account number in a table — could leak even when form values were masked.)
+- **No values, no page content, no screenshots.** Weft captures the *structure* of the workflow — which step, which system, what kind of action — using stable element roles/labels, not the data on screen. Anything textual that is captured passes a PII-redaction pass, and a **privacy preview** shows the user exactly what will be kept before it's confirmed. (Names are not detected automatically: a link whose text is a customer name is caught only in the preview.) (This closes the earlier hole where on-screen content — a customer name in a heading, an account number in a table — could leak even when form values were masked.)
 - This sidesteps MFA, CAPTCHAs, bot-detection, and ToS violations that would break any "give us your password" approach.
 
 ## Core flow (the closed loop)
