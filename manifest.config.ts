@@ -35,15 +35,9 @@ export default defineManifest({
       run_at: "document_idle",
     },
   ],
-  // The Process Intelligence dashboard (Dashboard 1) is a full-tab page, not
-  // part of the side panel — a dashboard's executive-summary/KPI-grid
-  // layouts need real screen width. Declaring it here (rather than only
-  // linking to it) is what gets @crxjs/vite-plugin to bundle it as a build
-  // input at all, since nothing else in the manifest references it.
-  web_accessible_resources: [
-    {
-      resources: ["src/dashboard/index.html"],
-      matches: ["<all_urls>"],
-    },
-  ],
+  // The Process Intelligence dashboard (src/dashboard/index.html) is a
+  // full-tab extension page opened from the side panel. It is deliberately
+  // NOT a web_accessible_resource: the extension can open its own pages
+  // without that, and listing it would let any website detect that Weft is
+  // installed or load the dashboard in a frame. vite.config.ts bundles it.
 });
