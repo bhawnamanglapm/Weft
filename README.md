@@ -14,7 +14,7 @@
 
 ## Who did what
 
-**Bhawna Mangla** (product owner, GitHub [`bhawnamanglapm`](https://github.com/bhawnamanglapm)) set the product direction, scope and privacy rules, the milestone plan, and the acceptance check for each milestone. Most of the code was written by **Claude Code**, an AI coding assistant, working to that plan one milestone at a time; the commit history shows this.
+**Bhawna Mangla**, product owner (GitHub [`bhawnamanglapm`](https://github.com/bhawnamanglapm)). Built with **Claude Code**, an AI coding assistant.
 
 ## How it works
 
