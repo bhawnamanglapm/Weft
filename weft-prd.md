@@ -63,7 +63,7 @@ These are enforced in the product, not just documented.
 
 **FR-3 Masking (hard rule, extended).** Never store: input values, query strings, screenshots, **or page-content text from data regions**. Prefer roles/ARIA labels/stable selectors for step labels over visible text. Any retained text passes a PII-redaction pass (patterns for emails, PAN/GST, account/card-like numbers, obvious name fields). Enforced at capture time. *The digit-run pattern catches 6+ digit runs (not just 9+), tolerating space/comma/period/hyphen/slash/parens separators — short account/ticket/OTP numbers and currency-formatted amounts are redacted, not just full card numbers. Name-field redaction remains a hard, generically-unsolvable problem for a regex pass; the primary mitigation is FR-2's role scoping, which stops most name leaks (e.g. a customer-name grid cell) at the source rather than relying on redaction to catch them after the fact.*
 
-**FR-4 Privacy preview.** Before a session is saved, show the user a plain-language summary of exactly what will be stored (step labels, systems, timings — and confirmation that no values/content were kept), with the option to redact any label or discard the session.
+**FR-4 Privacy preview.** Before a session is saved, show the user a plain-language summary of exactly what will be stored (step labels, systems, timings — and confirmation that no values/content were kept), with the option to redact any label or discard the session. *As built, events are kept in `chrome.storage.local` while recording, and the preview appears when capture stops; a discarded session is deleted outright. Fixed 2026-10-18: confirming used to apply the user's edits only to the step list, so a redacted label survived in the raw events and reappeared on the merged map (which is rebuilt from raw events). `src/lib/review.ts` now rewrites every raw event to its step's confirmed label, and sessions confirmed by older versions are cleaned up on update.*
 
 **FR-5 Multi-session capture.** The user names a workflow and can record it multiple times (same or different runs) under that name.
 
@@ -157,7 +157,8 @@ ROI { shippedCount, hoursSaved, moneySaved, estimateVsActualPct }
 
 - Never read/store: input values, query strings, screenshots, page-content text from data regions.
 - Step labels prefer roles/ARIA/stable selectors; any retained text is PII-redacted.
-- **Pre-save privacy preview** shows exactly what will be stored; user can redact/discard.
+- **Privacy preview** when capture stops shows exactly what will be kept; user can redact/discard. Only the confirmed labels are kept.
+- Names are not caught by redaction: a link or button whose visible text is a person's name is recorded as that name, and only the preview catches it.
 - All data in `chrome.storage.local`; nothing transmitted.
 - Consent screen + persistent recording reassurance.
 - Rationale: for fintech buyers, "what exactly do you capture?" is deal-gating; the honest answer is "structurally, not the sensitive part."

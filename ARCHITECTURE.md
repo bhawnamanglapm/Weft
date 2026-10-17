@@ -172,10 +172,11 @@ This is the product's central constraint (see `CLAUDE.md`'s hard rules), enforce
 1. **Capture-time masking** — `capture.ts` never reads `.value` from any input; only role/label/tag identity.
 2. **Interactive-role scoping** — only genuine widget roles produce a label at all (§2); structural/data roles (grid cells, rows, tables) never do.
 3. **PII redaction** — `redact.ts` patterns for email, PAN, GST, and a broad digit-run pattern (6+ digits, tolerating space/comma/period/hyphen/slash/parens as separators — catches short account/ticket/OTP numbers and currency-formatted amounts, not just full card numbers) applied at the moment text is read.
-4. **Privacy preview** — nothing is "confirmed" (eligible for merge) until the user has seen every step label/system/timing and had the chance to redact or discard.
+4. **Privacy preview** — nothing is "confirmed" (eligible for merge) until the user has seen every step label/system/timing and had the chance to redact or discard. Confirming goes through `src/lib/review.ts`, which rewrites every raw event to its step's confirmed label: `merge.ts` re-segments from raw events, so editing only `session.steps` (as before 2026-10-18) let a redacted label reappear on the map. On extension update, sessions confirmed by older versions are rewritten the same way.
 5. **Tab-scoping** — an active recording only ever sees the tab it started in (§7.5).
 6. **Consent gate** — the entire app (not just the Start button) is blocked behind an explicit first-run acknowledgment of what is/isn't captured.
-7. **No network** — there is no `fetch`/`XMLHttpRequest`/remote origin anywhere in `src/`; verified by grep as part of the hardening pass, not just by convention.
+7. **No network** — there is no `fetch`/`XMLHttpRequest`/remote origin anywhere in `src/`; verified by grep as part of the hardening pass, not just by convention. Re-checked 2026-10-18 against the built `dist/`: the only URLs in the bundle are XML namespace strings and library error-doc links, none fetched.
+8. **Not web-accessible** — the dashboard is an extension page opened with `chrome.tabs.create`, not a `web_accessible_resource`, so websites cannot load it in a frame. (crxjs still lists the content-script file as web-accessible for its loader; a site that knows the extension ID could use it to detect that Weft is installed.)
 
 ## 9. Build & tooling
 
@@ -188,7 +189,7 @@ This is the product's central constraint (see `CLAUDE.md`'s hard rules), enforce
 Two distinct verification modes, deliberately not mixed:
 
 - **Pure functions** (`segment`, `classify`, `merge`, `taxonomy`, `savings`, `roi`, `generate-brief`, `export-ticket`, `redactText`, `privacy-preview`, `map-layout`, `metrics`) are unit-tested with Vitest, run in Node with no DOM. These are fast, deterministic, and cheap to run in CI.
-- **DOM/`chrome.*`-API-touching code** (`capture.ts`, `service-worker.ts`, the full React UI) is **not** unit-tested — there's no jsdom/chrome-mock harness in this repo. It's verified by building the extension and driving it with Playwright against a real Chromium instance (`/opt/pw-browsers/chromium-*` in the dev container), loaded via `--load-extension`. This is how every milestone gate and every hardening fix in this project's history was actually confirmed, including reproducing a bug against the pre-fix code before confirming the fix closes it.
+- **DOM/`chrome.*`-API-touching code** (`capture.ts`, `service-worker.ts`, the full React UI) is **not** unit-tested — there's no jsdom/chrome-mock harness in this repo. It's verified by building the extension and driving it with Playwright against a real Chromium instance (`/opt/pw-browsers/chromium-*` in the dev container), loaded via `--load-extension`. This is how every milestone gate and every hardening fix in this project's history was actually confirmed, including reproducing a bug against the pre-fix code before confirming the fix closes it. Those Playwright scripts were not committed, so these checks cannot be re-run from this repository.
 
 **Gotcha for anyone writing new Playwright checks against this repo:** a real `chrome.sidePanel` is not a tab and never steals active-tab focus when you interact with it. The common workaround for driving it with Playwright — opening its HTML directly at `chrome-extension://<id>/src/sidepanel/index.html` as an ordinary page — does *not* preserve that property. Calling `page.bringToFront()` on that simulated panel page actually changes which tab `chrome.tabs.query({ active: true })` returns, which a real side-panel click never does. Keep the actual workflow tab frontmost throughout a verification script, and interact with the panel's elements without bringing it to front (Playwright can dispatch actions to a non-frontmost page's CDP target directly).
 
@@ -199,4 +200,7 @@ See `weft-prd.md` §13 for the open decisions needing product/business sign-off 
 - Merge alignment's positional pairing within a multi-step gap (§7.3) can mis-pair a gap containing more than one already-divergent position each.
 - No storage-quota usage indicator or `unlimitedStorage` permission (§5).
 - Single-window assumption in tab-scoping (§7.5) — a workflow spanning multiple browser *windows* isn't handled, only multiple tabs within one window.
+- Names are not detected by `redact.ts` (no regex can do that reliably). A link or button whose visible text is a name is recorded as that name until the user redacts it in the privacy preview.
+- No in-app way to delete confirmed sessions or all data; uninstalling the extension clears `chrome.storage.local`.
+- The content script runs on every page and sends each click to the service worker, which drops it unless a recording is active in that tab.
 - `Workflow` (in `types.ts`) is declared but never materialized as a persisted object — the implementation works entirely off `workflowId` strings as a grouping key across sessions/registers.
